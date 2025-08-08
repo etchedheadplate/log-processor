@@ -1,0 +1,6 @@
+.ropeproject
+.zed
+venv
+brief.pdf
+*.DS_Store
+scratch.py
