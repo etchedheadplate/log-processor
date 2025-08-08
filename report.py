@@ -3,7 +3,7 @@ import json
 class LogProcessor:
     def __init__(self, files: list) -> None:
         self.files = files
-        self.entries = []
+        self.entries: list[dict] = []
         self.fields: set[str] = set()
 
         for path in files:
@@ -23,3 +23,7 @@ class LogProcessor:
 
         print(f"Loaded {len(self.entries)} entries")
         print(f"Found fields: {sorted(self.fields)}")
+
+    def _get_values(self, field: str):
+        field_values = [entry.get(field) for entry in self.entries if entry.get(field) is not None]
+        return field_values
