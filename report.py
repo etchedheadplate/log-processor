@@ -10,8 +10,8 @@ class ReportGenerator:
         self.fields: set[str] = set()
         self.filter_date = None
         self.reports = {
-            'average': self._report_average,
-            #'median': self._report_median,
+            'average': self.report_average,
+            #'median': self.report_median,
             }
 
         if filter_date:
@@ -54,11 +54,7 @@ class ReportGenerator:
                     self.lines.append(obj)
                     self.fields.update(obj.keys())
 
-    def _get_values(self, field: str) -> list:
-        field_values = [entry.get(field) for entry in self.lines if entry.get(field) is not None]
-        return field_values
-
-    def _report_average(self, field: str, target: str = 'response_time') -> None:
+    def report_average(self, field: str, target: str = 'response_time') -> None:
         totals = {}
         counts = {}
 
@@ -108,4 +104,4 @@ if __name__ == '__main__':
     ]
 
     for field in fields:
-        processor._report_average(field)
+        processor.report_average(field)
