@@ -1,4 +1,5 @@
 import json
+from tabulate import tabulate
 
 class LogProcessor:
     def __init__(self, files: list) -> None:
@@ -21,21 +22,13 @@ class LogProcessor:
                     self.lines.append(obj)
                     self.fields.update(obj.keys())
 
-        print(f'Loaded {len(self.lines)} lines')
-        print(f'Found fields: {sorted(self.fields)}')
-
     def _get_values(self, field: str):
         field_values = [entry.get(field) for entry in self.lines if entry.get(field) is not None]
         return field_values
 
     def _get_count(self, field: str):
-        field_values = self._get_values(field)
-        count = {}
-
-        for value in field_values:
-            count[value] = count.get(value, 0) + 1
-
-        return count
+        values = self._get_values(field)
+        return {x: values.count(x) for x in set(values)}
 
     def _get_average(self, field: str, target: str = 'request_method'):
         totals = {}
@@ -51,6 +44,27 @@ class LogProcessor:
 
         averages = {key: totals[key] / counts[key] for key in totals}
         return averages
+
+    def _print_report(self, field: str, target: str = 'response_time'):
+        counts = self._get_count(field)
+        averages = self._get_average(field, target)
+
+        # Get all unique values sorted by count descending
+        sorted_values = sorted(counts, key=lambda v: counts[v], reverse=True)
+
+        # Build table rows step-by-step
+        table_data = []
+        index = 1
+        for value in sorted_values:
+            total = counts[value]
+            avg = averages.get(value, 0)
+            avg_rounded = round(avg, 3)
+            table_data.append([index, value, total, avg_rounded])
+            index += 1
+
+        headers = ["#", field, "Total", f"Avg {target}"]
+
+        print(tabulate(table_data, headers))
 
 
 
@@ -72,4 +86,4 @@ if __name__ == '__main__':
     ]
 
     for field in fields:
-        report = processor._get_average(field)
+        processor._print_report(field, target='response_time')
