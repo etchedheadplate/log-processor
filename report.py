@@ -7,28 +7,22 @@ class ReportGenerator:
     def __init__(
         self,
         files: list,
-        report: str = 'average',
         field: Optional[str] = 'url',
         target: Optional[str] = 'response_time',
-        filter_date: Optional[str] = None
+        date: Optional[str] = None
     ) -> None:
         self.files = files
-        self.lines: list[dict] = []
-        self.fields: set[str] = set()
-        self.filter_date = None
-        self.reports = [
-            'average',
-            #'median',
-        ]
-        self.report = report
         self.field = field
         self.target = target
+        self.date = None
+        self.lines: list[dict] = []
+        self.fields: set[str] = set()
 
-        if filter_date:
+        if date:
             try:
-                self.filter_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
+                self.date = datetime.strptime(date, '%Y-%m-%d').date()
             except ValueError as exc:
-                raise ValueError(f'filter_date "{filter_date}" is not a valid date (expected YYYY-MM-DD)') from exc
+                raise ValueError(f'date "{date}" is not a valid date (expected YYYY-MM-DD)') from exc
 
         for file in self.files:
             self._parse_file(file)
@@ -61,9 +55,9 @@ class ReportGenerator:
                 else:
                     obj['_parsed_timestamp'] = None
 
-                if self.filter_date:
+                if self.date:
                     ts_date = obj['_parsed_timestamp'].date() if obj['_parsed_timestamp'] else None
-                    if ts_date != self.filter_date:
+                    if ts_date != self.date:
                         continue
 
                 self.lines.append(obj)
@@ -110,7 +104,7 @@ if __name__ == '__main__':
         'exm/example2.log'
     ]
 
-    filter_date = '2025-06-22'
+    date = '2025-06-22'
 
     fields = [
         #'@timestamp',
@@ -122,5 +116,5 @@ if __name__ == '__main__':
     ]
 
     for field in fields:
-        processor = ReportGenerator(files=files, field=field, filter_date=filter_date)
+        processor = ReportGenerator(files=files, field=field, date=date)
         processor.report_average()
