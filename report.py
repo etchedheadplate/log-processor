@@ -20,39 +20,42 @@ class ReportGenerator:
             except ValueError as exc:
                 raise ValueError(f'filter_date "{filter_date}" is not a valid date (expected YYYY-MM-DD)') from exc
 
-        self._parse_files()
+        for file in self.files:
+            self._parse_file(file)
 
-    def _parse_files(self) -> None:
-        for path in self.files:
-            with open(path, 'r', encoding='utf-8') as log:
-                for num, line in enumerate(log, start=1):
-                    line = line.strip()
-                    if not line:
-                        continue
+    def _parse_file(self, file: str) -> None:
+        with open(file, 'r', encoding='utf-8') as log:
+            for num, line in enumerate(log, start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    obj = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    raise ValueError(
+                        f'Line {num} in {file} is not valid JSON: {exc}'
+                    ) from exc
+
+                timestamp_str = obj.get('@timestamp')
+                if timestamp_str:
                     try:
-                        obj = json.loads(line)
-                    except json.JSONDecodeError as exc:
-                        raise ValueError(
-                            f'Line {num} in {path} is not valid JSON: {exc}'
-                        ) from exc
-
-                    timestamp_str = obj.get('@timestamp')
-                    if timestamp_str:
-                        try:
-                            parsed_ts = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                            obj['_parsed_timestamp'] = parsed_ts
-                        except ValueError:
-                            obj['_parsed_timestamp'] = None
-                    else:
+                        parsed_ts = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                        obj['_parsed_timestamp'] = parsed_ts
+                    except ValueError:
                         obj['_parsed_timestamp'] = None
+                else:
+                    obj['_parsed_timestamp'] = None
 
-                    if self.filter_date:
-                        ts_date = obj['_parsed_timestamp'].date() if obj['_parsed_timestamp'] else None
-                        if ts_date != self.filter_date:
-                            continue
+                if self.filter_date:
+                    ts_date = obj['_parsed_timestamp'].date() if obj['_parsed_timestamp'] else None
+                    if ts_date != self.filter_date:
+                        continue
 
-                    self.lines.append(obj)
-                    self.fields.update(obj.keys())
+                self.lines.append(obj)
+                self.fields.update(obj.keys())
+
+    def _print_report(self, table_data: list, headers: list, filter_date=None):
+        print(tabulate(table_data, headers=headers))
 
     def report_average(self, field: str, target: str = 'response_time') -> None:
         totals = {}
@@ -79,8 +82,6 @@ class ReportGenerator:
 
         self._print_report(table_data, headers)
 
-    def _print_report(self, table_data: list, headers: list, filter_date=None):
-        print(tabulate(table_data, headers=headers))
 
 
 
