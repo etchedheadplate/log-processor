@@ -9,6 +9,10 @@ class ReportGenerator:
             self.lines: list[dict] = []
             self.fields: set[str] = set()
             self.filter_date = None
+            self.reports = {
+                    "average": self._get_average,
+                    #"median": self._get_median,
+                }
 
             if filter_date:
                 try:
