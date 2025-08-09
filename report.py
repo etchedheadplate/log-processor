@@ -55,10 +55,6 @@ class ReportGenerator:
         field_values = [entry.get(field) for entry in self.lines if entry.get(field) is not None]
         return field_values
 
-    def _get_count(self, field: str) -> dict:
-        values = self._get_values(field)
-        return {x: values.count(x) for x in set(values)}
-
     def _report_average(self, field: str, target: str = 'response_time') -> None:
         totals = {}
         counts = {}
