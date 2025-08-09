@@ -10,15 +10,15 @@ class ReportGenerator:
             self.fields: set[str] = set()
             self.filter_date = None
             self.reports = {
-                    "average": self._get_average,
-                    #"median": self._get_median,
+                'average': self._report_average,
+                #'median': self._get_median,
                 }
 
             if filter_date:
                 try:
                     self.filter_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
                 except ValueError as exc:
-                    raise ValueError(f"filter_date '{filter_date}' is not a valid date (expected YYYY-MM-DD)") from exc
+                    raise ValueError(f'filter_date "{filter_date}" is not a valid date (expected YYYY-MM-DD)') from exc
 
             for path in files:
                 with open(path, 'r', encoding='utf-8') as log:
@@ -59,7 +59,7 @@ class ReportGenerator:
         values = self._get_values(field)
         return {x: values.count(x) for x in set(values)}
 
-    def _get_average(self, field: str, target: str) -> dict:
+    def _report_average(self, field: str, target: str = 'response_time') -> None:
         totals = {}
         counts = {}
 
@@ -72,26 +72,20 @@ class ReportGenerator:
                 counts[field_value] = counts.get(field_value, 0) + 1
 
         averages = {key: totals[key] / counts[key] for key in totals}
-        return averages
 
-    def _print_report(self, field: str, target: str = 'response_time') -> None:
-        counts = self._get_count(field)
-        averages = self._get_average(field, target)
-
-        sorted_values = sorted(counts, key=lambda v: counts[v], reverse=True)
+        sorted_items = sorted(averages.items(), key=lambda kv: counts[kv[0]], reverse=True)
 
         table_data = []
-        index = 1
-        for value in sorted_values:
+        for index, (value, avg) in enumerate(sorted_items, start=1):
             total = counts[value]
-            avg = averages.get(value, 0)
-            avg_rounded = round(avg, 3)
-            table_data.append([index, value, total, avg_rounded])
-            index += 1
+            table_data.append([index, value, total, round(avg, 3)])
 
         headers = ['', field, 'total', f'avg_{target}']
 
-        print(tabulate(table_data, headers))
+        self._print_report(table_data, headers)
+
+    def _print_report(self, table_data: list, headers: list, filter_date=None):
+        print(tabulate(table_data, headers=headers))
 
 
 
@@ -115,4 +109,4 @@ if __name__ == '__main__':
     ]
 
     for field in fields:
-        processor._print_report(field, target='response_time')
+        processor._report_average(field)
