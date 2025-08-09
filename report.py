@@ -4,15 +4,25 @@ from datetime import datetime
 from typing import Optional
 
 class ReportGenerator:
-    def __init__(self, files: list, report: str = 'average', field: str = 'url', filter_date: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        files: list,
+        report: str = 'average',
+        field: Optional[str] = 'url',
+        target: Optional[str] = 'response_time',
+        filter_date: Optional[str] = None
+    ) -> None:
         self.files = files
         self.lines: list[dict] = []
         self.fields: set[str] = set()
         self.filter_date = None
-        self.reports = {
-            'average': self.report_average,
-            #'median': self.report_median,
-            }
+        self.reports = [
+            'average',
+            #'median',
+        ]
+        self.report = report
+        self.field = field
+        self.target = target
 
         if filter_date:
             try:
@@ -22,6 +32,11 @@ class ReportGenerator:
 
         for file in self.files:
             self._parse_file(file)
+
+        if self.field not in self.fields:
+            raise ValueError(f'"{self.field}" is not present in logs (present: {self.fields})')
+        if self.target not in self.fields:
+            raise ValueError(f'"{self.target}" is not present in logs (present: {self.fields})')
 
     def _parse_file(self, file: str) -> None:
         with open(file, 'r', encoding='utf-8') as log:
@@ -54,20 +69,24 @@ class ReportGenerator:
                 self.lines.append(obj)
                 self.fields.update(obj.keys())
 
-    def _print_report(self, table_data: list, headers: list, filter_date=None):
+    def _print_report(self, table_data: list, headers: list) -> None:
         print(tabulate(table_data, headers=headers))
 
-    def report_average(self, field: str, target: str = 'response_time') -> None:
+    def report_average(self) -> None:
         totals = {}
         counts = {}
 
         for entry in self.lines:
-            field_value = entry.get(field)
-            target_value = entry.get(target)
+            field_value = entry.get(self.field)
+            target_value = entry.get(self.target)
 
             if field_value is not None and isinstance(target_value, (int, float)):
                 totals[field_value] = totals.get(field_value, 0) + target_value
                 counts[field_value] = counts.get(field_value, 0) + 1
+
+        if not totals:
+            print(f"No valid data found for field '{self.field}' and target '{self.target}'")
+            return
 
         averages = {key: totals[key] / counts[key] for key in totals}
 
@@ -78,7 +97,7 @@ class ReportGenerator:
             total = counts[value]
             table_data.append([index, value, total, round(avg, 3)])
 
-        headers = ['', field, 'total', f'avg_{target}']
+        headers = ['', self.field, 'total', f'avg_{self.target}']
 
         self._print_report(table_data, headers)
 
@@ -93,8 +112,6 @@ if __name__ == '__main__':
 
     filter_date = '2025-06-22'
 
-    processor = ReportGenerator(files, filter_date=filter_date)
-
     fields = [
         #'@timestamp',
         #'status',
@@ -105,4 +122,5 @@ if __name__ == '__main__':
     ]
 
     for field in fields:
-        processor.report_average(field)
+        processor = ReportGenerator(files=files, field=field, filter_date=filter_date)
+        processor.report_average()
