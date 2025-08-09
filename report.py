@@ -3,7 +3,7 @@ from tabulate import tabulate
 from datetime import datetime
 from typing import Optional
 
-class LogProcessor:
+class ReportGenerator:
     def __init__(self, files: list, filter_date: Optional[str] = None) -> None:
             self.files = files
             self.lines: list[dict] = []
@@ -47,15 +47,15 @@ class LogProcessor:
                         self.lines.append(obj)
                         self.fields.update(obj.keys())
 
-    def _get_values(self, field: str):
+    def _get_values(self, field: str) -> list:
         field_values = [entry.get(field) for entry in self.lines if entry.get(field) is not None]
         return field_values
 
-    def _get_count(self, field: str):
+    def _get_count(self, field: str) -> dict:
         values = self._get_values(field)
         return {x: values.count(x) for x in set(values)}
 
-    def _get_average(self, field: str, target: str):
+    def _get_average(self, field: str, target: str) -> dict:
         totals = {}
         counts = {}
 
@@ -70,7 +70,7 @@ class LogProcessor:
         averages = {key: totals[key] / counts[key] for key in totals}
         return averages
 
-    def _print_report(self, field: str, target: str = 'response_time'):
+    def _print_report(self, field: str, target: str = 'response_time') -> None:
         counts = self._get_count(field)
         averages = self._get_average(field, target)
 
@@ -99,7 +99,7 @@ if __name__ == '__main__':
 
     filter_date = '2025-06-22'
 
-    processor = LogProcessor(files, filter_date=filter_date)
+    processor = ReportGenerator(files, filter_date=filter_date)
 
     fields = [
         #'@timestamp',
