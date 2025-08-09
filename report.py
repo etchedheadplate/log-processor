@@ -1,3 +1,4 @@
+import os
 import json
 from tabulate import tabulate
 from datetime import datetime
@@ -17,6 +18,10 @@ class ReportGenerator:
         self.date = None
         self.lines: list[dict] = []
         self.fields: set[str] = set()
+
+        missing_files = [file for file in self.files if not os.path.exists(file)]
+        if missing_files:
+            raise FileNotFoundError(f'The following file(s) do not exist: {", ".join(missing_files)}')
 
         if date:
             try:
@@ -106,6 +111,10 @@ if __name__ == '__main__':
 
     date = '2025-06-22'
 
+    field = 'url'
+
+    target = 'response_time'
+
     fields = [
         #'@timestamp',
         #'status',
@@ -115,6 +124,11 @@ if __name__ == '__main__':
         #'http_user_agent',
     ]
 
+    processor = ReportGenerator(files=files, field=field, target=target, date=date)
+    processor.report_average()
+
+'''
     for field in fields:
         processor = ReportGenerator(files=files, field=field, date=date)
         processor.report_average()
+'''
