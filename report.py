@@ -36,9 +36,11 @@ class ReportGenerator:
         self._filter_fields()
 
         if self.field not in self.fields:
-            raise ValueError(f"'{self.field}' is not valid field: {', '.join(sorted([f for f in self.fields if f != '_parsed_timestamp']))}")
+            valid_fields = '\n    '.join(sorted([f for f in self.fields if f != '_parsed_timestamp']))
+            raise ValueError(f"'{self.field}' is not valid field, expected:\n    {valid_fields}")
         if self.target not in self.fields:
-            raise ValueError(f"'{self.target}' is not valid target: {', '.join(sorted([f for f in self.fields if f not in ['_parsed_timestamp', self.field]]))}")
+            valid_targets = '\n    '.join(sorted([f for f in self.fields if f not in ['_parsed_timestamp', self.field]]))
+            raise ValueError(f"'{self.target}' is not valid target, expected:\n    {valid_targets}")
         if self.field == self.target:
             raise ValueError("field and target can't be the same")
 
