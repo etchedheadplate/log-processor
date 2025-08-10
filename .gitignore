@@ -1,6 +1,8 @@
 .ropeproject
 .zed
+__pycache__
 venv
-brief.pdf
-*.DS_Store
 scratch.py
+brief.pdf
+notes.md
+*.DS_Store
