@@ -22,7 +22,7 @@ class ReportGenerator:
 
         missing_files = [file for file in self.files if not os.path.exists(file)]
         if missing_files:
-            raise FileNotFoundError(f'The following file(s) do not exist: {", ".join(missing_files)}')
+            raise FileNotFoundError(f'the following file(s) do not exist: {", ".join(missing_files)}')
 
         if date:
             try:
@@ -34,9 +34,11 @@ class ReportGenerator:
             self._parse_file(file)
 
         if self.field not in self.fields:
-            raise ValueError(f'"{self.field}" is not present in logs (present: {self.fields})')
+            raise ValueError(f"'{self.field}' is not valid field: {', '.join(sorted([f for f in self.fields if f != '_parsed_timestamp']))}")
         if self.target not in self.fields:
-            raise ValueError(f'"{self.target}" is not present in logs (present: {self.fields})')
+            raise ValueError(f"'{self.target}' is not valid target: {', '.join(sorted([f for f in self.fields if f not in ['_parsed_timestamp', self.field]]))}")
+        if self.field == self.target:
+            raise ValueError("field and target can't be the same")
 
     def _flatten_keys(self, data: dict, parent_key: str = '') -> list[str]:
         keys = []
@@ -57,7 +59,7 @@ class ReportGenerator:
                     obj = json.loads(line)
                 except json.JSONDecodeError as exc:
                     raise ValueError(
-                        f'Line {num} in {file} is not valid JSON: {exc}'
+                        f'line {num} in {file} is not valid JSON: {exc}'
                     ) from exc
 
                 timestamp_str = obj.get('@timestamp')
