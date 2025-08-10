@@ -3,7 +3,7 @@ import sys
 from report import ReportGenerator
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate reports from log files.')
+    parser = argparse.ArgumentParser(description='Generate reports from JSON-structured log files.')
     parser.add_argument(
         '--file', '-f', nargs='+', required=True,
         help='Log file(s) to process (one or more files)'
@@ -28,8 +28,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        # Create instance with parsed args
-        report_gen = ReportGenerator(
+        processor = ReportGenerator(
             files=args.file,
             field=args.field,
             target=args.target,
@@ -39,15 +38,13 @@ def main():
         print(f'Error: {e}', file=sys.stderr)
         sys.exit(1)
 
-    # Compose method name and check if it exists
-    method_name = f'report_{args.report}'
-    if not hasattr(report_gen, method_name):
-        print(f'Error: Report method "{method_name}" does not exist.', file=sys.stderr)
+    report_name = f'report_{args.report}'
+    if not hasattr(processor, report_name):
+        print(f'Error: Report "{report_name}" does not exist.', file=sys.stderr)
         sys.exit(1)
 
-    # Call the method dynamically
-    method = getattr(report_gen, method_name)
-    method()
+    report = getattr(processor, report_name)
+    report()
 
 if __name__ == '__main__':
     main()
