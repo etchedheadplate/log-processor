@@ -33,6 +33,8 @@ class ReportGenerator:
         for file in self.files:
             self._parse_file(file)
 
+        self._filter_fields()
+
         if self.field not in self.fields:
             raise ValueError(f"'{self.field}' is not valid field: {', '.join(sorted([f for f in self.fields if f != '_parsed_timestamp']))}")
         if self.target not in self.fields:
@@ -79,6 +81,19 @@ class ReportGenerator:
 
                 self.lines.append(obj)
                 self.fields.update(self._flatten_keys(obj))
+
+    def _filter_fields(self) -> None:
+        usable_fields = set()
+        for field in self.fields:
+            is_usable = True
+            for entry in self.lines:
+                val = self._get_nested_value(entry, field)
+                if isinstance(val, dict):
+                    is_usable = False
+                    break
+            if is_usable:
+                usable_fields.add(field)
+        self.fields = usable_fields
 
     def _get_nested_value(self, data: dict, path: str):
         keys = path.split('/')
