@@ -2,7 +2,8 @@ import os
 import json
 from tabulate import tabulate
 from datetime import datetime
-from typing import Optional
+from statistics import median
+from typing import Optional, Dict
 
 class ReportGenerator:
     def __init__(
@@ -84,30 +85,31 @@ class ReportGenerator:
             if isinstance(value, dict) and key in value:
                 value = value[key]
             else:
-                return None  # Path does not exist
+                return None
         return value
 
-    def _print_report(self, table_data: list, headers: list) -> None:
-        print(tabulate(table_data, headers=headers))
-
-    def report_average(self) -> None:
-        totals = {}
-        counts = {}
-
+    def _group_target_values(self):
+        grouped_values = {}
         for entry in self.lines:
             field_value = self._get_nested_value(entry, self.field)
             target_value = self._get_nested_value(entry, self.target)
 
             if field_value is not None and isinstance(target_value, (int, float)):
-                totals[field_value] = totals.get(field_value, 0) + target_value
-                counts[field_value] = counts.get(field_value, 0) + 1
+                grouped_values.setdefault(field_value, []).append(target_value)
 
-        if not totals:
+        counts: Dict = {key: len(vals) for key, vals in grouped_values.items()}
+        return grouped_values, counts
+
+    def _print_report(self, table_data: list, headers: list) -> None:
+        print(tabulate(table_data, headers=headers))
+
+    def report_average(self) -> None:
+        grouped_values, counts = self._group_target_values()
+        if not grouped_values:
             print(f'No valid data found for field "{self.field}" and target "{self.target}"')
             return
 
-        averages = {key: totals[key] / counts[key] for key in totals}
-
+        averages = {key: sum(vals) / len(vals) for key, vals in grouped_values.items()}
         sorted_items = sorted(averages.items(), key=lambda kv: counts[kv[0]], reverse=True)
 
         table_data = []
@@ -116,7 +118,23 @@ class ReportGenerator:
             table_data.append([index, value, total, round(avg, 3)])
 
         headers = ['', self.field, 'total', f'avg_{self.target}']
+        self._print_report(table_data, headers)
 
+    def report_median(self) -> None:
+        grouped_values, counts = self._group_target_values()
+        if not grouped_values:
+            print(f'No valid data found for field "{self.field}" and target "{self.target}"')
+            return
+
+        medians = {key: median(vals) for key, vals in grouped_values.items()}
+        sorted_items = sorted(medians.items(), key=lambda kv: counts[kv[0]], reverse=True)
+
+        table_data = []
+        for index, (value, med) in enumerate(sorted_items, start=1):
+            total = counts[value]
+            table_data.append([index, value, total, round(med, 3)])
+
+        headers = ['', self.field, 'total', f'med_{self.target}']
         self._print_report(table_data, headers)
 
 
@@ -124,16 +142,16 @@ class ReportGenerator:
 
 if __name__ == '__main__':
     files = [
-        #'exm/example1.log',
-        #'exm/example2.log',
-        'exm/example_ext.log'
+        'exm/example1.log',
+        'exm/example2.log',
+        #'exm/example_ext.log'
     ]
 
     date = '2025-06-22'
 
     field = 'url'
 
-    target = 'bytes_sent'
+    target = 'response_time'
 
     fields = [
         #'@timestamp',
@@ -146,6 +164,8 @@ if __name__ == '__main__':
 
     processor = ReportGenerator(files=files, field=field, target=target)
     processor.report_average()
+    print()
+    processor.report_median()
 
 '''
     for field in fields:
