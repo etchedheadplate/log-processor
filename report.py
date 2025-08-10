@@ -155,39 +155,3 @@ class ReportGenerator:
 
         headers = ['', self.field, 'total', f'med_{self.target}']
         self._print_report(table_data, headers)
-
-
-
-
-if __name__ == '__main__':
-    files = [
-        'exm/example1.log',
-        'exm/example2.log',
-        #'exm/example_ext.log'
-    ]
-
-    date = '2025-06-22'
-
-    field = 'url'
-
-    target = 'response_time'
-
-    fields = [
-        #'@timestamp',
-        #'status',
-        'url',
-        #'request_method',
-        #'response_time',
-        #'http_user_agent',
-    ]
-
-    processor = ReportGenerator(files=files, field=field, target=target)
-    processor.report_average()
-    print()
-    processor.report_median()
-
-'''
-    for field in fields:
-        processor = ReportGenerator(files=files, field=field, date=date)
-        processor.report_average()
-'''
