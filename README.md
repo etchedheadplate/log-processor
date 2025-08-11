@@ -44,6 +44,8 @@ To add new report types, implement a new method in `ReportGenerator` prefixed wi
 pytest --cov=report
 ```
 
+![testing](img/testing.png)
+
 # License
 
 MIT License
