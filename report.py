@@ -32,9 +32,12 @@ class ReportGenerator:
         self.lines: list[dict] = []
         self.fields: set[str] = set()
 
-        missing_files = [file for file in self.files if not os.path.exists(file)]
-        if missing_files:
-            raise FileNotFoundError(f'the following file(s) do not exist: {", ".join(missing_files)}')
+        if len(self.files) == 0:
+            raise FileNotFoundError('provide path to a log file(s)')
+        else:
+            missing_files = [file for file in self.files if not os.path.exists(file)]
+            if missing_files:
+                raise FileNotFoundError(f'the following file(s) do not exist: {", ".join(missing_files)}')
 
         if date:
             try:
