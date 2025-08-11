@@ -14,18 +14,36 @@ python3 main.py --file FILE [FILE ...] [--report {average,median}] [--field FIEL
 
 # Examples
 
-**Default:** Generate average `{response_time}` reports grouped by unique `{url}` entries from JSON log files:
+## Default
+
+Generate average `{response_time}` reports grouped by unique `{url}` entries from JSON log files:
 
 ```bash
 python3 main.py --file exm/example1.log exm/example2.log --report average
 ```
 
-**Complex:** Generate median `{bytes_sent}` reports grouped by `{http_user_agent}/{os}/{name}` for a specific date:
+![default](img/default.png)
+
+## Complex
+
+Generate median `{bytes_sent}` reports grouped by `{http_user_agent}/{os}/{name}` for a specific date:
 
 ```bash
 python3 main.py --file exm/example_ext.log --report median --field http_user_agent/os/name --target bytes_sent --date 2025-06-23
 ```
 
+![complex](img/complex.png)
+
 # Extending Reports
 
 To add new report types, implement a new method in `ReportGenerator` prefixed with `report_` that calls `self._print_report(table_data, headers)` with appropriate data formatted for the `tabulate` library.
+
+# Testing
+
+```bash
+pytest --cov=report
+```
+
+# License
+
+MIT License
