@@ -6,37 +6,30 @@ import pytest
 from report import ReportGenerator
 
 LOG_ENTRIES = [
-    json.dumps({
-        "@timestamp": "2025-08-10T12:00:00Z",
-        "url": "/api/endpoint1/...",
-        "response_time": 120,
-        "http_user_agent": {
-            "os": {
-                "name": "Windows"
-            }
+    json.dumps(
+        {
+            "@timestamp": "2025-08-10T12:00:00Z",
+            "url": "/api/endpoint1/...",
+            "response_time": 120,
+            "http_user_agent": {"os": {"name": "Windows"}},
         }
-    }),
-    json.dumps({
-        "@timestamp": "2025-08-10T12:05:00Z",
-        "url": "/api/endpoint2/...",
-        "response_time": 150,
-        "http_user_agent": {
-            "os": {
-                "name": "Linux"
-            }
+    ),
+    json.dumps(
+        {
+            "@timestamp": "2025-08-10T12:05:00Z",
+            "url": "/api/endpoint2/...",
+            "response_time": 150,
+            "http_user_agent": {"os": {"name": "Linux"}},
         }
-    }),
-    json.dumps({
-        "@timestamp": "2025-08-09T10:00:00Z",
-        "url": "/api/endpoint1/...",
-        "response_time": 100
-    }),
-    json.dumps({
-        "@timestamp": "2025-08-10T12:10:00Z",
-        "url": "/api/endpoint1/...",
-        "response_time": 130
-    }),
+    ),
+    json.dumps(
+        {"@timestamp": "2025-08-09T10:00:00Z", "url": "/api/endpoint1/...", "response_time": 100}
+    ),
+    json.dumps(
+        {"@timestamp": "2025-08-10T12:10:00Z", "url": "/api/endpoint1/...", "response_time": 130}
+    ),
 ]
+
 
 @pytest.fixture
 def log_file(tmp_path):
@@ -88,8 +81,8 @@ def test_init_invalid_date_format(log_file):
 def test_date_filtering(log_file):
     rg = ReportGenerator(files=[log_file], date="2025-08-10")
     assert all(
-        line.get('_parsed_timestamp') and
-        line['_parsed_timestamp'].date() == datetime.strptime("2025-08-10", "%Y-%m-%d").date()
+        line.get("_parsed_timestamp")
+        and line["_parsed_timestamp"].date() == datetime.strptime("2025-08-10", "%Y-%m-%d").date()
         for line in rg.lines
     )
 
@@ -128,29 +121,15 @@ def test_report_median_output(log_file, capsys):
 
 def test_flatten_keys_simple(log_file):
     rg = ReportGenerator(files=[log_file])
-    nested_dict = {
-        "a": {
-            "b": 1,
-            "c": {
-                "d": 2
-            }
-        },
-        "e": 3
-    }
+    nested_dict = {"a": {"b": 1, "c": {"d": 2}}, "e": 3}
     keys = rg._flatten_keys(nested_dict)
-    expected_keys = ['a', 'a/b', 'a/c', 'a/c/d', 'e']
+    expected_keys = ["a", "a/b", "a/c", "a/c/d", "e"]
     assert set(keys) == set(expected_keys)
 
 
 def test_get_nested_value(log_file):
     rg = ReportGenerator(files=[log_file])
-    data = {
-        "a": {
-            "b": {
-                "c": 123
-            }
-        }
-    }
+    data = {"a": {"b": {"c": 123}}}
     val = rg._get_nested_value(data, "a/b/c")
     assert val == 123
     val = rg._get_nested_value(data, "a/b/x")
@@ -173,15 +152,16 @@ def test_filter_fields_removes_dict_values(log_file):
 
 
 BAD_LOG_ENTRY = [
-    json.dumps({
-        "not_a_@timestamp": "2025-08-10T12:00:00Z",
-        "url": 111,
-        "response_time": "not_a_number",
-        222: {
-            "subdict": ["not", "a", "dict"]
+    json.dumps(
+        {
+            "not_a_@timestamp": "2025-08-10T12:00:00Z",
+            "url": 111,
+            "response_time": "not_a_number",
+            222: {"subdict": ["not", "a", "dict"]},
         }
-    }),
+    ),
 ]
+
 
 @pytest.fixture
 def bad_log_file(tmp_path):
@@ -193,7 +173,7 @@ def bad_log_file(tmp_path):
 def test_unexpected_structure_in_log(bad_log_file, capsys):
     rg = ReportGenerator(files=[bad_log_file], field="url", target="response_time")
 
-    assert rg.lines[0]['_parsed_timestamp'] is None
+    assert rg.lines[0]["_parsed_timestamp"] is None
 
     assert "url" in rg.fields
     assert isinstance(rg._get_nested_value(rg.lines[0], "url"), int)

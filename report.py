@@ -10,9 +10,9 @@ class ReportGenerator:
     def __init__(
         self,
         files: list[str],
-        field: str = 'url',
-        target: str = 'response_time',
-        date: str | None = None
+        field: str = "url",
+        target: str = "response_time",
+        date: str | None = None,
     ) -> None:
         """
         Initialize the ReportGenerator.
@@ -34,17 +34,21 @@ class ReportGenerator:
         self.fields: set[str] = set()
 
         if len(self.files) == 0:
-            raise FileNotFoundError('provide path to a log file(s)')
+            raise FileNotFoundError("provide path to a log file(s)")
         else:
             missing_files = [file for file in self.files if not os.path.exists(file)]
             if missing_files:
-                raise FileNotFoundError(f'the following file(s) do not exist: {", ".join(missing_files)}')
+                raise FileNotFoundError(
+                    f'the following file(s) do not exist: {", ".join(missing_files)}'
+                )
 
         if date:
             try:
-                self.date = datetime.strptime(date, '%Y-%m-%d').date()
+                self.date = datetime.strptime(date, "%Y-%m-%d").date()
             except ValueError as exc:
-                raise ValueError(f'date "{date}" is not a valid date (expected YYYY-MM-DD)') from exc
+                raise ValueError(
+                    f'date "{date}" is not a valid date (expected YYYY-MM-DD)'
+                ) from exc
 
         for file in self.files:
             self._parse_file(file)
@@ -52,15 +56,19 @@ class ReportGenerator:
         self._filter_fields()
 
         if self.field not in self.fields:
-            valid_fields = '\n    '.join(sorted([f for f in self.fields if f != '_parsed_timestamp']))
+            valid_fields = "\n    ".join(
+                sorted([f for f in self.fields if f != "_parsed_timestamp"])
+            )
             raise ValueError(f"'{self.field}' is not valid field, expected:\n    {valid_fields}")
         if self.target not in self.fields:
-            valid_targets = '\n    '.join(sorted([f for f in self.fields if f not in ['_parsed_timestamp', self.field]]))
+            valid_targets = "\n    ".join(
+                sorted([f for f in self.fields if f not in ["_parsed_timestamp", self.field]])
+            )
             raise ValueError(f"'{self.target}' is not valid target, expected:\n    {valid_targets}")
         if self.field == self.target:
             raise ValueError("field and target can't be the same")
 
-    def _flatten_keys(self, data: dict, parent_key: str = '') -> list[str]:
+    def _flatten_keys(self, data: dict, parent_key: str = "") -> list[str]:
         """
         Recursively extract all keys from nested dictionaries, flattening nested keys
         into slash-separated strings (e.g., 'http_user_agent/os/name').
@@ -71,7 +79,7 @@ class ReportGenerator:
         """
         keys = []
         for key, value in data.items():
-            new_key = f'{parent_key}/{key}' if parent_key else key
+            new_key = f"{parent_key}/{key}" if parent_key else key
             keys.append(new_key)
             if isinstance(value, dict):
                 keys.extend(self._flatten_keys(value, new_key))
@@ -88,7 +96,7 @@ class ReportGenerator:
         - Collects all entries and fields discovered.
         - Raises descriptive errors on invalid JSON or date parsing failures.
         """
-        with open(file, 'r', encoding='utf-8') as log:
+        with open(file, "r", encoding="utf-8") as log:
             for num, line in enumerate(log, start=1):
                 line = line.strip()
                 if not line:
@@ -96,22 +104,20 @@ class ReportGenerator:
                 try:
                     obj = json.loads(line)
                 except json.JSONDecodeError as exc:
-                    raise ValueError(
-                        f'line {num} in {file} is not valid JSON: {exc}'
-                    ) from exc
+                    raise ValueError(f"line {num} in {file} is not valid JSON: {exc}") from exc
 
-                timestamp_str = obj.get('@timestamp')
+                timestamp_str = obj.get("@timestamp")
                 if timestamp_str:
                     try:
-                        parsed_ts = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                        obj['_parsed_timestamp'] = parsed_ts
+                        parsed_ts = datetime.fromisoformat(timestamp_str.replace("Z", "+00:00"))
+                        obj["_parsed_timestamp"] = parsed_ts
                     except ValueError:
-                        obj['_parsed_timestamp'] = None
+                        obj["_parsed_timestamp"] = None
                 else:
-                    obj['_parsed_timestamp'] = None
+                    obj["_parsed_timestamp"] = None
 
                 if self.date:
-                    ts_date = obj['_parsed_timestamp'].date() if obj['_parsed_timestamp'] else None
+                    ts_date = obj["_parsed_timestamp"].date() if obj["_parsed_timestamp"] else None
                     if ts_date != self.date:
                         continue
 
@@ -127,7 +133,7 @@ class ReportGenerator:
 
         Returns the value found or None if any key along the path is missing or invalid.
         """
-        keys = nested_path.split('/')
+        keys = nested_path.split("/")
         value = line
         for key in keys:
             if isinstance(value, dict) and key in value:
@@ -208,7 +214,7 @@ class ReportGenerator:
             total = counts[value]
             table_data.append([index, value, total, round(avg, 3)])
 
-        headers = ['', self.field, 'total', f'avg_{self.target}']
+        headers = ["", self.field, "total", f"avg_{self.target}"]
         self._print_report(table_data, headers)
 
     def report_median(self) -> None:
@@ -233,5 +239,5 @@ class ReportGenerator:
             total = counts[value]
             table_data.append([index, value, total, round(med, 3)])
 
-        headers = ['', self.field, 'total', f'med_{self.target}']
+        headers = ["", self.field, "total", f"med_{self.target}"]
         self._print_report(table_data, headers)
