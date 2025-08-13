@@ -1,8 +1,9 @@
 import json
-import pytest
 from datetime import datetime
-from report import ReportGenerator
 
+import pytest
+
+from report import ReportGenerator
 
 LOG_ENTRIES = [
     json.dumps({

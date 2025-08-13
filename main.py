@@ -1,6 +1,8 @@
 import argparse
 import sys
+
 from report import ReportGenerator
+
 
 def main():
     parser = argparse.ArgumentParser(description='Generate reports from JSON-structured log files.')

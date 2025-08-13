@@ -1,8 +1,9 @@
-import os
 import json
-from tabulate import tabulate
+import os
 from datetime import datetime
 from statistics import median
+
+from tabulate import tabulate
 
 
 class ReportGenerator:
