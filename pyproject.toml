@@ -1,0 +1,10 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+select = ["E", "F", "W", "I"]
+
+ignore = ["E501"]
+
+[tool.ruff.isort]
+combine-as-imports = true
