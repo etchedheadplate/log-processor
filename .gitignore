@@ -8,7 +8,5 @@
 __pycache__/
 venv/
 htmlcov/
-scratch.py
-brief.pdf
-notes.md
+notes/
 .DS_Store
